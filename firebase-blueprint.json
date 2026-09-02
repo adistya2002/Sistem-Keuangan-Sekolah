@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firestore-blueprint.json",
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "Student master data for each unit (TK, KB, RQ)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Student ID" },
+        "unit": { "type": "string", "enum": ["TK", "KB", "RQ"], "description": "Unit TK/KB/RQ" },
+        "nis": { "type": "string", "description": "Nomor Induk Siswa" },
+        "name": { "type": "string", "description": "Nama Siswa / Santri" },
+        "gender": { "type": "string", "enum": ["L", "P"], "description": "Jenis Kelamin" },
+        "className": { "type": "string", "description": "Nama Kelas / Halaqoh" },
+        "status": { "type": "string", "enum": ["AKTIF", "LULUS", "PINDAH", "NON_AKTIF"], "description": "Status Siswa" },
+        "academicYear": { "type": "string", "description": "Tahun Ajaran" },
+        "parentPhone": { "type": "string", "description": "Nomor WhatsApp Orang Tua" },
+        "customSppAmount": { "type": "number", "description": "Tarif SPP Khusus/Diskon" }
+      },
+      "required": ["id", "unit", "name", "className", "status", "academicYear"]
+    },
+    "studentPayment": {
+      "title": "Student Payment",
+      "description": "Payment records for SPP, DSP, and other fees per unit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Payment Record ID" },
+        "receiptNumber": { "type": "string", "description": "Nomor Seri Kwitansi Resmi" },
+        "unit": { "type": "string", "enum": ["TK", "KB", "RQ"], "description": "Unit Sekolah" },
+        "academicYear": { "type": "string", "description": "Tahun Ajaran" },
+        "studentId": { "type": "string", "description": "ID Siswa / Santri" },
+        "studentName": { "type": "string", "description": "Nama Siswa / Santri" },
+        "studentClass": { "type": "string", "description": "Kelas Siswa" },
+        "feeType": { "type": "string", "description": "Jenis Pembayaran" },
+        "totalAmount": { "type": "number", "description": "Nominal Pembayaran" },
+        "date": { "type": "string", "description": "Tanggal Pembayaran" },
+        "paymentMethod": { "type": "string", "enum": ["TUNAI", "TRANSFER"], "description": "Metode Pembayaran" }
+      },
+      "required": ["id", "receiptNumber", "unit", "academicYear", "studentId", "totalAmount", "date"]
+    },
+    "cashTransaction": {
+      "title": "Cash Transaction",
+      "description": "Buku Kas Umum (BKU) transactions per unit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Transaction ID" },
+        "unit": { "type": "string", "enum": ["TK", "KB", "RQ"], "description": "Unit Sekolah" },
+        "academicYear": { "type": "string", "description": "Tahun Ajaran" },
+        "date": { "type": "string", "description": "Tanggal Transaksi" },
+        "type": { "type": "string", "enum": ["MASUK", "KELUAR"], "description": "Tipe Transaksi" },
+        "category": { "type": "string", "description": "Kategori Transaksi" },
+        "description": { "type": "string", "description": "Uraian Transaksi Kas" },
+        "amount": { "type": "number", "description": "Nominal Transaksi (Rp)" },
+        "runningBalance": { "type": "number", "description": "Saldo Berjalan" }
+      },
+      "required": ["id", "unit", "academicYear", "date", "type", "description", "amount"]
+    },
+    "budgetPlan": {
+      "title": "Budget Plan",
+      "description": "RAPBS budget items per unit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Budget Item ID" },
+        "unit": { "type": "string", "enum": ["TK", "KB", "RQ"], "description": "Unit Sekolah" },
+        "academicYear": { "type": "string", "description": "Tahun Ajaran" },
+        "code": { "type": "string", "description": "Kode Rekening Anggaran" },
+        "category": { "type": "string", "enum": ["PENDAPATAN", "BELANJA"], "description": "Kategori" },
+        "subCategory": { "type": "string", "description": "Sub Kategori" },
+        "title": { "type": "string", "description": "Uraian Pos Anggaran" },
+        "plannedAmount": { "type": "number", "description": "Target Anggaran" }
+      },
+      "required": ["id", "unit", "academicYear", "category", "title", "plannedAmount"]
+    },
+    "masterFee": {
+      "title": "Master Fee",
+      "description": "Standard fee structures per unit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Fee ID" },
+        "unit": { "type": "string", "enum": ["TK", "KB", "RQ"], "description": "Unit Sekolah" },
+        "academicYear": { "type": "string", "description": "Tahun Ajaran" },
+        "type": { "type": "string", "description": "Jenis Biaya" },
+        "name": { "type": "string", "description": "Nama Biaya" },
+        "amount": { "type": "number", "description": "Besaran Biaya Standar" }
+      },
+      "required": ["id", "unit", "academicYear", "type", "amount"]
+    },
+    "systemData": {
+      "title": "System Data",
+      "description": "Consolidated multi-unit state synchronization payload",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document ID" },
+        "updatedAt": { "type": "string", "description": "Timestamp" },
+        "lastUpdatedUnit": { "type": "string", "description": "Unit of last updater" }
+      }
+    }
+  },
+  "firestore": {
+    "/sikeu_data/main_database": {
+      "schema": { "$ref": "systemData" },
+      "description": "Main multi-unit synchronized cloud database"
+    }
+  }
+}

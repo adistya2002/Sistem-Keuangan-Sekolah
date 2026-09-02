@@ -1,0 +1,6 @@
+{
+  "name": "SIKEU TK-KB-RQ",
+  "description": "Sistem Informasi Manajemen Keuangan, Pembayaran SPP & RAPBS Terpadu untuk TK, KB, SD IT, SMP IT, SMA IT, dan RQ Thoriqul Jannah Sinjai",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

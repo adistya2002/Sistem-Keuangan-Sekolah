@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #FDFBF7;
+    --bg-surface: #FFFFFF;
+    --bg-sand: #F4F1EC;
+    --bg-stone: #E9E3D8;
+    --border-sand: #D9D1C2;
+    --border-stone: #E9E3D8;
+    --text-main: #2D2821;
+    --text-body: #4A4238;
+    --text-muted: #8D8271;
+    --text-secondary: #6B5E4C;
+    --natural-sage: #8B9D83;
+    --natural-ochre: #D4A373;
+    --natural-terracotta: #BC6C25;
+    --natural-clay: #A98467;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #FDFBF7;
+    color: #4A4238;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+@layer utilities {
+  /* Print styling support - Exact 1:1 match with screen preview */
+  @media print {
+    @page {
+      margin: 0 !important;
+    }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    html, body {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-size: 11pt !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      min-height: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    /* Hide all main app structural elements, footers, and floating controls */
+    header,
+    nav,
+    aside,
+    main,
+    footer,
+    [role="contentinfo"],
+    .no-print,
+    .app-footer,
+    .print-footer,
+    .modal-footer,
+    #scroll-controls-container,
+    #btn-scroll-top,
+    #btn-scroll-bottom {
+      display: none !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+
+    .page-break {
+      page-break-after: always !important;
+      break-after: page !important;
+    }
+
+    .page-break-inside-avoid {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* Modal isolation for print */
+    .print-receipt-modal-overlay {
+      position: static !important;
+      display: block !important;
+      top: auto !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      inset: auto !important;
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      backdrop-filter: none !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: auto !important;
+      z-index: auto !important;
+    }
+
+    .print-receipt-modal-card {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      max-height: none !important;
+      height: auto !important;
+      background: #ffffff !important;
+      overflow: visible !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .print-receipt-viewport {
+      padding: 0 !important;
+      margin: 0 !important;
+      background: #ffffff !important;
+      overflow: visible !important;
+      display: block !important;
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    .receipt-print-sheet {
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background-color: #ffffff !important;
+      margin: 0 auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+    }
+  }
+}
+
+/* Custom Natural Tones scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F4F1EC;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9D1C2;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8AC97;
+}
+
