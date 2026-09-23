@@ -15,7 +15,7 @@ import {
   INITIAL_STUDENT_PAYMENTS, 
   INITIAL_AUDIT_LOGS 
 } from '../data/initialData';
-import { downloadEncryptedBackup, decryptAppState, downloadAllUnitsZipBackup, downloadSingleUnitZipBackup } from '../utils/crypto';
+import { downloadEncryptedBackup, decryptAppState, downloadAllUnitsZipBackup, downloadSingleUnitZipBackup, verifyUserPassword } from '../utils/crypto';
 import { 
   subscribeToCloudDatabase, 
   saveDatabaseToCloud, 
@@ -94,6 +94,7 @@ interface AppContextValue {
   restoreBackup: (encryptedData: string, restrictToUnit?: SchoolUnitType) => boolean;
   restoreStateDirectly: (newState: AppState, description?: string, restrictToUnit?: SchoolUnitType) => boolean;
   resetDefaultData: (unitOnly?: SchoolUnitType) => void;
+  purgeOldAuditLogs: (keepCount?: number) => void;
 }
 
 const STORAGE_KEY = 'SIKEU_TK_KB_RQ_THOJAN_V4';
@@ -535,7 +536,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const expectedPassword = foundUser.passwordHash || '4Rmag3don01cr#6';
-    if (passwordInput !== expectedPassword) {
+    if (!verifyUserPassword(passwordInput, expectedPassword)) {
       return { 
         success: false, 
         message: 'Password sandi yang Anda masukkan salah. Silakan periksa kembali.' 
@@ -1109,6 +1110,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [currentUser.role, activeUnit, logAudit]);
 
+  const purgeOldAuditLogs = useCallback((keepCount = 25) => {
+    setState(prev => ({
+      ...prev,
+      auditLogs: prev.auditLogs.slice(0, keepCount)
+    }));
+    logAudit('UPDATE', 'Optimasi Database', `Pembersihan & pemadatan data audit log usang (menyimpan ${keepCount} entri terbaru untuk efisiensi penyimpanan Cloud Firestore)`);
+  }, [logAudit]);
+
   const value: AppContextValue = {
     state,
     activeUnit,
@@ -1156,7 +1165,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     exportUnitZip,
     restoreBackup,
     restoreStateDirectly,
-    resetDefaultData
+    resetDefaultData,
+    purgeOldAuditLogs
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

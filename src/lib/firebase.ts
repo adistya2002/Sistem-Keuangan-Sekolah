@@ -16,3 +16,5 @@ export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getA
 export const db: Firestore = firebaseConfigData.firestoreDatabaseId
   ? getFirestore(app, firebaseConfigData.firestoreDatabaseId)
   : getFirestore(app);
+
+export { firebaseConfigData };

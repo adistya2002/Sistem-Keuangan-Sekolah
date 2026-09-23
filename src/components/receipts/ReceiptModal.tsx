@@ -543,7 +543,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
 
           {/* Receipt Number & Date Box */}
           <div className="text-right shrink-0">
-            <div className="inline-block bg-slate-900 text-white font-mono font-bold px-2 py-0.5 rounded text-[10px] sm:text-xs">
+            <div className="inline-block bg-emerald-100 text-slate-900 border border-emerald-400 font-mono font-extrabold px-2.5 py-0.5 rounded text-[10px] sm:text-xs tracking-wider shadow-2xs">
               KWITANSI RESMI
             </div>
             <p className="font-mono font-bold text-slate-800 text-[10px] sm:text-xs mt-0.5">
@@ -608,9 +608,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
         }`}>
           {/* Left: Total Amount Box */}
           <div className="col-span-5 sm:col-span-6 space-y-1">
-            <div className="bg-slate-900 text-white p-1.5 sm:p-2 rounded-lg shadow-xs flex items-center justify-between">
-              <span className="text-[8px] sm:text-[9.5px] uppercase font-bold text-emerald-400">Total Lunas:</span>
-              <span className={`font-mono font-black text-emerald-300 ${
+            <div className="bg-emerald-100 border-2 border-emerald-400 text-slate-900 p-1.5 sm:p-2 rounded-lg shadow-2xs flex items-center justify-between">
+              <span className="text-[8px] sm:text-[9.5px] uppercase font-bold text-slate-900">Total Lunas:</span>
+              <span className={`font-mono font-black text-slate-900 ${
                 isMicro ? 'text-xs' : isMini ? 'text-sm sm:text-base' : 'text-base sm:text-lg'
               }`}>
                 {formatRupiah(payment.totalAmount)}
@@ -716,8 +716,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ payment, onClose }) 
         </div>
 
         {/* Total */}
-        <div className="flex justify-between text-xs font-black py-1 border-b border-black">
-          <span>TOTAL:</span>
+        <div className="flex justify-between text-xs font-black py-1 border-b border-black text-black">
+          <span>TOTAL LUNAS:</span>
           <span>{formatRupiah(payment.totalAmount)}</span>
         </div>
 

@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { CashTransaction, TransactionType, SppMonth, ACADEMIC_MONTHS } from '../../types';
 import { 
   Plus, Search, Filter, Printer, ArrowDownRight, ArrowUpRight, 
-  Trash2, Edit3, X, Check, FileSpreadsheet, Calendar, Wallet, Download, RefreshCw
+  Trash2, Edit3, X, Check, FileSpreadsheet, Calendar, Wallet, Download, RefreshCw, FileText
 } from 'lucide-react';
 import { 
   formatRupiah, 
@@ -15,6 +15,7 @@ import {
 } from '../../utils/formatters';
 import { PrintPreviewModal } from '../common/PrintPreviewModal';
 import { PrintHeaderKop } from '../common/PrintHeaderKop';
+import { BkuWorkflowPdfModal } from './BkuWorkflowPdfModal';
 
 interface CashLedgerModuleProps {
   initialOpenModal?: boolean;
@@ -105,6 +106,7 @@ export const CashLedgerModule: React.FC<CashLedgerModuleProps> = ({ initialOpenM
   const [isModalOpen, setIsModalOpen] = useState(initialOpenModal);
   const [editingTx, setEditingTx] = useState<CashTransaction | null>(null);
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
+  const [showWorkflowModal, setShowWorkflowModal] = useState<boolean>(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -349,6 +351,15 @@ export const CashLedgerModule: React.FC<CashLedgerModuleProps> = ({ initialOpenM
 
         {/* Quick Actions */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowWorkflowModal(true)}
+            className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-amber-300 shadow-2xs"
+            title="Lihat & Unduh Panduan Alur Transaksi BKU s/d Cetak Sekarang (Format PDF)"
+          >
+            <FileText className="w-4 h-4 text-amber-700" />
+            <span>Alur BKU (PDF)</span>
+          </button>
+
           <button
             onClick={exportCsv}
             className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-200"
@@ -951,6 +962,17 @@ export const CashLedgerModule: React.FC<CashLedgerModuleProps> = ({ initialOpenM
 
           </div>
         </PrintPreviewModal>
+      )}
+
+      {/* Workflow Guide SOP PDF Modal */}
+      {showWorkflowModal && (
+        <BkuWorkflowPdfModal
+          isOpen={showWorkflowModal}
+          onClose={() => setShowWorkflowModal(false)}
+          activeUnit={activeUnit}
+          activeProfile={activeProfile}
+          academicYear={activeAcademicYear}
+        />
       )}
 
     </div>

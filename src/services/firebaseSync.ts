@@ -298,3 +298,168 @@ export async function fetchDatabaseFromCloud(): Promise<Partial<AppState> | null
     handleFirestoreError(error, OperationType.GET, path);
   }
 }
+
+export const FIRESTORE_DOC_MAX_BYTES = 1048576; // 1 MiB = 1,048,576 bytes
+export const FIRESTORE_STORAGE_MAX_BYTES = 1073741824; // 1 GiB = 1,073,741,824 bytes
+
+export interface FirestoreQuotaStats {
+  docMaxBytes: number;
+  docCurrentBytes: number;
+  docRemainingBytes: number;
+  docUsagePercent: number;
+
+  storageMaxBytes: number;
+  storageCurrentBytes: number;
+  storageRemainingBytes: number;
+  storageUsagePercent: number;
+
+  status: 'OPTIMAL' | 'WARNING' | 'CRITICAL';
+  statusLabel: string;
+  isNearLimit: boolean;
+  isCritical: boolean;
+  quotaExceededError: boolean;
+  errorMessage?: string;
+
+  breakdown: {
+    studentsBytes: number;
+    paymentsBytes: number;
+    bkuBytes: number;
+    budgetsBytes: number;
+    feesBytes: number;
+    auditLogsBytes: number;
+    usersAndProfilesBytes: number;
+  };
+
+  dailyLimits: {
+    maxDailyReads: number;
+    maxDailyWrites: number;
+    maxDailyDeletes: number;
+    estimatedDailyReads: number;
+    estimatedDailyWrites: number;
+  };
+}
+
+/**
+ * Format bytes into human readable format (Bytes, KB, MB, GB)
+ */
+export function formatBytes(bytes: number, decimals = 1): string {
+  if (bytes <= 0) return '0 B';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const safeIndex = Math.min(i, sizes.length - 1);
+  return `${parseFloat((bytes / Math.pow(k, safeIndex)).toFixed(dm))} ${sizes[safeIndex]}`;
+}
+
+/**
+ * Calculate real-time Firestore database size, remaining quota, and storage limits
+ */
+export function calculateFirestoreQuotaStats(
+  state: AppState, 
+  syncError?: string | null,
+  simulatedLoadPercent?: number | null
+): FirestoreQuotaStats {
+  const getByteSize = (data: any): number => {
+    try {
+      const json = JSON.stringify(data);
+      if (typeof TextEncoder !== 'undefined') {
+        return new TextEncoder().encode(json).length;
+      }
+      return json.length;
+    } catch {
+      return 0;
+    }
+  };
+
+  const studentsBytes = getByteSize(state.students);
+  const paymentsBytes = getByteSize(state.studentPayments);
+  const bkuBytes = getByteSize(state.cashTransactions);
+  const budgetsBytes = getByteSize(state.budgetPlans);
+  const feesBytes = getByteSize(state.masterFees);
+  const auditLogsBytes = getByteSize(state.auditLogs);
+  const usersAndProfilesBytes = getByteSize({ users: state.users, profiles: state.profiles, academicYears: state.academicYears });
+
+  // Calculate actual consolidated document size in Firestore
+  let actualDocBytes = studentsBytes + paymentsBytes + bkuBytes + budgetsBytes + feesBytes + auditLogsBytes + usersAndProfilesBytes + 512; // 512 bytes metadata overhead
+
+  // If simulation is enabled, override for demonstration / testing purpose
+  if (typeof simulatedLoadPercent === 'number' && simulatedLoadPercent > 0) {
+    actualDocBytes = Math.round((simulatedLoadPercent / 100) * FIRESTORE_DOC_MAX_BYTES);
+  }
+
+  const docRemainingBytes = Math.max(0, FIRESTORE_DOC_MAX_BYTES - actualDocBytes);
+  const docUsagePercent = parseFloat(((actualDocBytes / FIRESTORE_DOC_MAX_BYTES) * 100).toFixed(2));
+
+  // Multiplier for accumulated storage (including indexes, backups, and historic transaction deltas)
+  const estimatedStorageBytes = Math.min(FIRESTORE_STORAGE_MAX_BYTES, actualDocBytes * 8 + 5_242_880); // ~5 MB base project overhead
+  const storageRemainingBytes = Math.max(0, FIRESTORE_STORAGE_MAX_BYTES - estimatedStorageBytes);
+  const storageUsagePercent = parseFloat(((estimatedStorageBytes / FIRESTORE_STORAGE_MAX_BYTES) * 100).toFixed(2));
+
+  // Check error string for quota exceeded
+  const quotaExceededError = Boolean(
+    syncError && (
+      syncError.toLowerCase().includes('quota') ||
+      syncError.toLowerCase().includes('resource-exhausted') ||
+      syncError.toLowerCase().includes('exceeded') ||
+      syncError.toLowerCase().includes('limit')
+    )
+  );
+
+  const isCritical = quotaExceededError || docUsagePercent >= 85 || docRemainingBytes < 153_600; // < 150 KB left
+  const isNearLimit = isCritical || docUsagePercent >= 70;
+
+  const status: 'OPTIMAL' | 'WARNING' | 'CRITICAL' = isCritical 
+    ? 'CRITICAL' 
+    : isNearLimit 
+      ? 'WARNING' 
+      : 'OPTIMAL';
+
+  const statusLabel = isCritical 
+    ? 'Kapasitas Kritis (Hampir Habis)' 
+    : isNearLimit 
+      ? 'Peringatan Kapasitas Menipis' 
+      : 'Kapasitas Normal & Sehat';
+
+  // Estimate daily reads/writes based on active records
+  const estimatedDailyWrites = Math.min(20000, 120 + state.cashTransactions.length + state.studentPayments.length);
+  const estimatedDailyReads = Math.min(50000, 450 + (state.students.length * 2));
+
+  return {
+    docMaxBytes: FIRESTORE_DOC_MAX_BYTES,
+    docCurrentBytes: actualDocBytes,
+    docRemainingBytes,
+    docUsagePercent,
+
+    storageMaxBytes: FIRESTORE_STORAGE_MAX_BYTES,
+    storageCurrentBytes: estimatedStorageBytes,
+    storageRemainingBytes,
+    storageUsagePercent,
+
+    status,
+    statusLabel,
+    isNearLimit,
+    isCritical,
+    quotaExceededError,
+    errorMessage: syncError || undefined,
+
+    breakdown: {
+      studentsBytes,
+      paymentsBytes,
+      bkuBytes,
+      budgetsBytes,
+      feesBytes,
+      auditLogsBytes,
+      usersAndProfilesBytes
+    },
+
+    dailyLimits: {
+      maxDailyReads: 50000,
+      maxDailyWrites: 20000,
+      maxDailyDeletes: 20000,
+      estimatedDailyReads,
+      estimatedDailyWrites
+    }
+  };
+}
+

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserRole, SchoolUnitType, UserAccount } from '../../types';
 import { Shield, Key, UserCheck, X, CheckCircle2, Lock, UserPlus, Eye, EyeOff, KeyRound, Sparkles } from 'lucide-react';
+import { verifyUserPassword } from '../../utils/crypto';
 
 interface SwitchUserModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClos
     if (!selectedUserForLogin) return;
 
     // Check password if set
-    if (selectedUserForLogin.passwordHash && inputPassword !== selectedUserForLogin.passwordHash) {
+    if (!verifyUserPassword(inputPassword, selectedUserForLogin.passwordHash)) {
       setLoginError('Password tidak sesuai. Silakan gunakan password yang valid (default: 4Rmag3don01cr#6).');
       return;
     }

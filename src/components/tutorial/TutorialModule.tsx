@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { 
   BookOpen, Printer, CheckCircle2, Shield, Video, 
-  HelpCircle, ChevronRight, FileText, Sparkles, Download, Layers
+  HelpCircle, ChevronRight, FileText, Sparkles, Download, Layers, ArrowRight
 } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+import { BkuWorkflowPdfModal } from '../cash/BkuWorkflowPdfModal';
 
 export const TutorialModule: React.FC = () => {
+  const { activeUnit, activeProfile, activeAcademicYear } = useApp();
   const [activeChapter, setActiveChapter] = useState(0);
+  const [showBkuPdfModal, setShowBkuPdfModal] = useState(false);
 
   const chapters = [
     {
@@ -114,13 +118,25 @@ Menjaga keamanan data keuangan lembaga sangat krusial:
           <p className="text-xs text-slate-500">Panduan langkah demi langkah penggunaan seluruh modul aplikasi keuangan dan SPP</p>
         </div>
 
-        <button
-          onClick={() => window.print()}
-          className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all self-start md:self-auto"
-        >
-          <Printer className="w-4 h-4" />
-          <span>Cetak Buku Panduan PDF</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+          <button
+            type="button"
+            onClick={() => setShowBkuPdfModal(true)}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all hover:scale-102"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Alur BKU s/d Cetak (PDF)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Cetak Seluruh Panduan</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Grid: Chapter List & Content Display */}
@@ -184,6 +200,32 @@ Menjaga keamanan data keuangan lembaga sangat krusial:
             {chapters[activeChapter].content}
           </div>
 
+          {/* Special SOP BKU Banner inside Chapter 2 */}
+          {activeChapter === 1 && (
+            <div className="p-4 bg-gradient-to-r from-emerald-900 to-slate-900 text-white rounded-xl shadow-md space-y-3 no-print">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-emerald-500/30 text-emerald-300 font-mono text-[10px] font-bold rounded">
+                  SOP Dokumen Resmi
+                </span>
+                <span className="text-xs font-bold text-slate-200">
+                  Alur Lengkap Transaksi Kas Masuk & Keluar s/d Cetak PDF
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Telah tersedia dokumen standar operasional prosedur (SOP) resmi berisi 7 tahapan bergambar dari input kas masuk, kas keluar, verifikasi saldo berjalan, filter periode, pratinjau lembar ber-kop surat, hingga menekan tombol "Cetak Sekarang" untuk ekspor berkas PDF.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowBkuPdfModal(true)}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs flex items-center gap-2 transition-all hover:scale-102"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Buka & Cetak Dokumen PDF Alur BKU Bergambar</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 no-print">
             <button
               disabled={activeChapter === 0}
@@ -205,6 +247,17 @@ Menjaga keamanan data keuangan lembaga sangat krusial:
         </div>
 
       </div>
+
+      {/* BKU Workflow Guide PDF Modal */}
+      {showBkuPdfModal && (
+        <BkuWorkflowPdfModal
+          isOpen={showBkuPdfModal}
+          onClose={() => setShowBkuPdfModal(false)}
+          activeUnit={activeUnit}
+          activeProfile={activeProfile}
+          academicYear={activeAcademicYear}
+        />
+      )}
 
     </div>
   );

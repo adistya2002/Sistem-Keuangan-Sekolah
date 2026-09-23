@@ -15,6 +15,7 @@ import {
   ReadZipResult 
 } from '../../utils/crypto';
 import { calculateUnitDatabaseStats, testCloudConnection } from '../../services/firebaseSync';
+import { SystemRiskAnalyticsModule } from './SystemRiskAnalyticsModule';
 
 export const SecurityModule: React.FC = () => {
   const { 
@@ -41,7 +42,23 @@ export const SecurityModule: React.FC = () => {
 
   const isSuperAdmin = currentUser.role === 'SUPER_ADMIN';
 
-  const [activeTab, setActiveTab] = useState<'USERS' | 'SYNC' | 'BACKUP' | 'AUDIT'>('BACKUP');
+  const [activeTab, setActiveTab] = useState<'USERS' | 'SYNC' | 'BACKUP' | 'AUDIT' | 'ANALYTICS'>(() => {
+    try {
+      const saved = localStorage.getItem('SIKEU_SECURITY_ACTIVE_TAB');
+      if (saved && ['USERS', 'SYNC', 'BACKUP', 'AUDIT', 'ANALYTICS'].includes(saved)) {
+        return saved as any;
+      }
+    } catch (e) {}
+    return 'ANALYTICS';
+  });
+
+  const handleSelectTab = (tab: 'USERS' | 'SYNC' | 'BACKUP' | 'AUDIT' | 'ANALYTICS') => {
+    setActiveTab(tab);
+    try {
+      localStorage.setItem('SIKEU_SECURITY_ACTIVE_TAB', tab);
+    } catch (e) {}
+  };
+
   const [isSyncing, setIsSyncing] = useState(false);
   const [isTestingLatency, setIsTestingLatency] = useState(false);
   const [latencyResult, setLatencyResult] = useState<{ success: boolean; latencyMs: number; message: string } | null>(null);
@@ -542,31 +559,61 @@ export const SecurityModule: React.FC = () => {
           </p>
         </div>
 
-        {/* Fast Action Shortcut for ZIP Backup */}
-        <button
-          type="button"
-          onClick={() => isSuperAdmin ? handleExportAllZip() : handleExportCurrentUnitZip(activeUnit)}
-          disabled={isExportingZip}
-          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all shrink-0 hover:scale-102 disabled:opacity-50"
-        >
-          {isExportingZip ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span>Membuat Paket ZIP...</span>
-            </>
-          ) : (
-            <>
-              <Archive className="w-4 h-4" />
-              <span>{isSuperAdmin ? 'Unduh Cadangan Semua Unit (.ZIP)' : `Unduh Cadangan Unit ${activeUnit} (.ZIP)`}</span>
-            </>
-          )}
-        </button>
+        {/* Fast Action Shortcuts */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('ANALYTICS')}
+            className="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all hover:scale-102"
+          >
+            <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <span>Analisa Risiko & Anomali</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500 text-slate-950">
+              LIVE
+            </span>
+          </button>
+
+          {/* Fast Action Shortcut for ZIP Backup */}
+          <button
+            type="button"
+            onClick={() => isSuperAdmin ? handleExportAllZip() : handleExportCurrentUnitZip(activeUnit)}
+            disabled={isExportingZip}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all shrink-0 hover:scale-102 disabled:opacity-50"
+          >
+            {isExportingZip ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Membuat Paket ZIP...</span>
+              </>
+            ) : (
+              <>
+                <Archive className="w-4 h-4" />
+                <span>{isSuperAdmin ? 'Unduh Cadangan Semua Unit (.ZIP)' : `Unduh Cadangan Unit ${activeUnit} (.ZIP)`}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 bg-white rounded-t-2xl px-4 pt-2 shadow-xs gap-1 overflow-x-auto">
         <button
-          onClick={() => setActiveTab('BACKUP')}
+          onClick={() => handleSelectTab('ANALYTICS')}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'ANALYTICS'
+              ? 'border-emerald-600 text-emerald-800 bg-emerald-50/50 rounded-t-xl shadow-2xs'
+              : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Activity className="w-4 h-4 text-emerald-600 animate-pulse" />
+          <span>1. Analisa Risiko, DB & Anomali</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-emerald-500 text-slate-950">
+            LIVE
+          </span>
+        </button>
+
+        <button
+          onClick={() => handleSelectTab('BACKUP')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'BACKUP'
               ? 'border-emerald-600 text-emerald-700 bg-emerald-50/40 rounded-t-xl'
@@ -574,11 +621,11 @@ export const SecurityModule: React.FC = () => {
           }`}
         >
           <Archive className="w-4 h-4 text-emerald-600" />
-          <span>1. Cadangan & Pemulihan ({isSuperAdmin ? 'ZIP Semua Unit' : `ZIP Unit ${activeUnit}`})</span>
+          <span>2. Cadangan & Pemulihan ({isSuperAdmin ? 'ZIP Semua Unit' : `ZIP Unit ${activeUnit}`})</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('SYNC')}
+          onClick={() => handleSelectTab('SYNC')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'SYNC'
               ? 'border-slate-900 text-slate-900'
@@ -586,11 +633,11 @@ export const SecurityModule: React.FC = () => {
           }`}
         >
           <Database className="w-4 h-4 text-emerald-600" />
-          <span>2. Sinkronisasi Cloud Multi-Unit</span>
+          <span>3. Sinkronisasi Cloud Multi-Unit</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('USERS')}
+          onClick={() => handleSelectTab('USERS')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'USERS'
               ? 'border-slate-900 text-slate-900'
@@ -598,11 +645,11 @@ export const SecurityModule: React.FC = () => {
           }`}
         >
           <KeyRound className="w-4 h-4" />
-          <span>3. Otoritas Pengguna ({displayedUsers.length})</span>
+          <span>4. Otoritas Pengguna ({displayedUsers.length})</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('AUDIT')}
+          onClick={() => handleSelectTab('AUDIT')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'AUDIT'
               ? 'border-slate-900 text-slate-900'
@@ -610,7 +657,7 @@ export const SecurityModule: React.FC = () => {
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>4. Audit Log Keamanan ({displayedAuditLogs.length})</span>
+          <span>5. Audit Log Keamanan ({displayedAuditLogs.length})</span>
         </button>
       </div>
 
@@ -1365,6 +1412,11 @@ export const SecurityModule: React.FC = () => {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Tab 1 / Sub-Module: Real-Time Risk, Database, Transaction & Anomaly Analytics */}
+      {activeTab === 'ANALYTICS' && (
+        <SystemRiskAnalyticsModule />
       )}
 
       {/* MODAL: ZIP Restore Preview & Selection */}
